@@ -1,0 +1,1 @@
+export {default as UploadArea} from './upload/upload.component'
