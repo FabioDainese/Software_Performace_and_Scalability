@@ -9,7 +9,7 @@ import "./upload.styles.scss";
 const UploadArea = () => {
     const { Dragger } = Upload;
     const props = {
-        name: "file",
+        name: "upload-area",
         multiple: false,
         accept: ".cpp,.cc",
         maxCount: 1,
@@ -18,18 +18,31 @@ const UploadArea = () => {
             const { status } = info.file;
             if (status !== "uploading") {
                 // TODO - Remove this log before production
-                console.log(info.file, info.fileList);
+                //console.log(info.file, info.fileList);
             }
             if (status === "done") {
-                message.success(
-                    `${info.file.name} file uploaded successfully.`
-                );
+                if (info.file.response.error) {
+                    info.file.status = "error"
+                    switch(info.file.response.error) {
+                        case 1000:
+                            message.error(`${info.file.name} file extesion not supported.`);
+                            break
+                        case 1001:
+                            message.error(`${info.file.name} file exceeds the maximum allowed size.`);
+                            break
+                        default:
+                            message.error("Unknown error :/");
+                    }
+                } else {
+                    message.success(`${info.file.name} file uploaded successfully.`);
+                }
             } else if (status === "error") {
                 message.error(`${info.file.name} file upload failed.`);
             }
         },
         onDrop(e) {
-            console.log("Dropped files", e.dataTransfer.files);
+            // TODO - Remove this log before production
+            //console.log("Dropped files", e.dataTransfer.files);
         },
     };
 
@@ -43,7 +56,7 @@ const UploadArea = () => {
                     Click or drag the file here to upload it
                 </p>
                 <p className="ant-upload-hint">
-                    Supports only CPP and CC files
+                    Supports only CPP and CC files (max 2MB)
                 </p>
             </Dragger>
         </>
