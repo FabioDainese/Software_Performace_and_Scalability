@@ -22,10 +22,10 @@ Either way this will run the app in *development mode* and it will be reachable 
 ***
 
 **NB**: the only prerequisites in order to run smoothly the project is to have installed locally: 
-* [*Node* and *npm*](https://nodejs.org/en/) (by installing *node* you'll get also *npm*);
-* [*Yarn*](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) (after you've install *node*, run `npm install --global yarn`)
+* [*Node* and *npm*](https://nodejs.org/en/) (by installing *node* you'll also get *npm*);
+* [*Yarn*](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) (after you've installed *node*, run `npm install --global yarn`)
 
-# Packages Installed
+# Packages Used
 For the frontend part:
 * React
 * Ant Design
@@ -42,4 +42,4 @@ Meanwhile, for the backend part:
 In order to increase the performance of the project here's a couples of possible improvements:
 
 * Introduce some caching techniques (e.g. if the uploaded file is the same it's useless to recompile it once again);
-* Consider using more performant web framework (e.g. ***Actix Web*** (Rust) or ***Lithium*** (C++17))
+* Consider using more performant web framework (e.g. ***Actix Web*** (Rust), ***Lithium*** (C++17), ***Drogon*** (C++14))
