@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
+const util = require('util');
+const exec = util.promisify(require("child_process").exec);
 
 const main = async () => {
     const app = express();
@@ -35,9 +37,10 @@ const main = async () => {
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    // app.use(express.static('./uploads/'));
 
     app.route("/upload").post((req, res) => {
-        fileUpload(req, res, (error) => {
+        fileUpload(req, res, async (error) => {
             if (error) {
                 let status = error.status
                 if(!status) {
@@ -50,10 +53,26 @@ const main = async () => {
                     }
                 }
                 // TODO - Remove this log before production
-                console.log(error.message)
+                // console.log(error.message)
                 return res.send({ error: status })
             } else {
-                res.send({ message: "File received correctly" });
+                let serverFilename = req.files["upload-area"][0].filename
+                let executableFilename = path.basename(serverFilename, path.extname(serverFilename));
+                // Absolutes path: req.files["upload-area"][0].path
+                const { error, stdout, stderr } = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`)
+                if (error) {
+                    console.log(`error: ${error.message}`);
+                    return;
+                }
+                if (stderr) {
+                    console.error(`stderr: ${stderr}`);
+                    return;
+                }
+                // TODO - Remove this log before production
+                // console.log(`Successfully generated '${executableFilename}' executable file`);
+                
+                res.download(path.join(__dirname, `../uploads/${executableFilename}`), executableFilename.replace(/-\d+$/, ""))
+                
             }
         })
     });

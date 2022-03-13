@@ -35,6 +35,9 @@ const UploadArea = () => {
                     }
                 } else {
                     message.success(`${info.file.name} file uploaded successfully.`);
+
+                    // TODO - Download the response in the right format
+                    console.log(info.file.response)
                 }
             } else if (status === "error") {
                 message.error(`${info.file.name} file upload failed.`);
