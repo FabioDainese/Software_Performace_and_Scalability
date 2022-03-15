@@ -34,10 +34,9 @@ const main = async () => {
     });
     const fileUpload = upload.fields([{ name: "upload-area", maxCount: 1 }]);
  
-    app.use(cors());
+    app.use(cors({exposedHeaders: ["filename","success"]}));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    // app.use(express.static('./uploads/'));
 
     app.route("/upload").post((req, res) => {
         fileUpload(req, res, async (error) => {
@@ -52,6 +51,7 @@ const main = async () => {
                             status = 0
                     }
                 }
+
                 // TODO - Remove this log before production
                 // console.log(error.message)
                 return res.send({ error: status })
@@ -71,8 +71,16 @@ const main = async () => {
                 // TODO - Remove this log before production
                 // console.log(`Successfully generated '${executableFilename}' executable file`);
                 
-                res.download(path.join(__dirname, `../uploads/${executableFilename}`), executableFilename.replace(/-\d+$/, ""))
-                
+                res.download(path.join(__dirname, `../uploads/${executableFilename}`), executableFilename.replace(/-\d+$/, ""), {
+                    headers: {
+                        "filename": executableFilename.replace(/-\d+$/, ""),
+                        "success": "true"
+                    }
+                })
+
+                // TODO - Execute the file in a sandbox env here!
+
+                await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`)
             }
         })
     });

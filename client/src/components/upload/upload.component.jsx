@@ -1,4 +1,6 @@
 import React from "react";
+import axios from "axios";
+import fileDownload from "js-file-download";
 
 import { Upload, message } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,39 +10,53 @@ import "./upload.styles.scss";
 
 const UploadArea = () => {
     const { Dragger } = Upload;
+
     const props = {
         name: "upload-area",
         multiple: false,
         accept: ".cpp,.cc",
         maxCount: 1,
-        action: "http://localhost:3001/upload",
+        customRequest: async ({ onSuccess, onError, file, onProgress }) => {
+            const fmData = new FormData();
+            const config = {
+                headers: { 
+                    "content-type": "multipart/form-data",
+                },
+                responseType:'arraybuffer'
+            };
+            fmData.append("upload-area",file);
+            try {
+                const res = await axios.post("http://localhost:3001/upload",fmData,config);
+                if (!res.headers['success']) {
+                    let error = JSON.parse(new TextDecoder("utf-8").decode(res.data)).error
+                    onError(error);
+                } else {
+                    fileDownload(res.data, res.headers['filename']);
+                    onSuccess();
+                }
+            } catch (err) {
+                onError({ err });
+            }
+        },
         onChange(info) {
-            const { status } = info.file;
+            const { status, error } = info.file;
             if (status !== "uploading") {
                 // TODO - Remove this log before production
-                //console.log(info.file, info.fileList);
+                // console.log(info.file, info.fileList);
             }
             if (status === "done") {
-                if (info.file.response.error) {
-                    info.file.status = "error"
-                    switch(info.file.response.error) {
-                        case 1000:
-                            message.error(`${info.file.name} file extesion not supported.`);
-                            break
-                        case 1001:
-                            message.error(`${info.file.name} file exceeds the maximum allowed size.`);
-                            break
-                        default:
-                            message.error("Unknown error :/");
-                    }
-                } else {
-                    message.success(`${info.file.name} file uploaded successfully.`);
-
-                    // TODO - Download the response in the right format
-                    console.log(info.file.response)
-                }
+                message.success(`${info.file.name} file uploaded successfully.`);
             } else if (status === "error") {
-                message.error(`${info.file.name} file upload failed.`);
+                switch(error) {
+                    case 1000:
+                        message.error(`File extesion not supported.`);
+                        break
+                    case 1001:
+                        message.error(`The file exceeds the maximum allowed size.`);
+                        break
+                    default:
+                        message.error("Unknown error :/");
+                } 
             }
         },
         onDrop(e) {
