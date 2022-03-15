@@ -31,6 +31,7 @@ For the frontend part:
 * Ant Design
 * Sass
 * Fontawesome
+* Axios
 
 Meanwhile, for the backend part:
 * Express
