@@ -13,7 +13,7 @@ const Homepage = () => {
         <>
             <Row justify="center" align="middle" className="main-title">
                 <Col xs={18} md={24} align="center">
-                    <Title level={2}>Compile like a breeze. Run it like a pro.</Title>
+                    <Title level={2}>Compile it like a breeze. Run it like a pro.</Title>
                     <Paragraph type="secondary">by the indisputable leaders in the strategic conversion of <FontAwesomeIcon icon={faMugHot} className="no-indent"/> into <FontAwesomeIcon icon={faCode} /></Paragraph>
                 </Col>
             </Row>
