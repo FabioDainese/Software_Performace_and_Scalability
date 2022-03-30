@@ -44,8 +44,8 @@ Meanwhile, for the backend part:
 In order to properly install *Tsung* in your *macOS* system, run the following commands in a terminal:
 
 * `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+* `brew install erlang`
 * `brew install tsung`
-* `brew install erlang` (incase you're getting any *erlang* related error)
 * `sudo cpan Template` (needed in order to generate the html reports)
 
 ### Running a Benchmark and Generating its Relative Report
