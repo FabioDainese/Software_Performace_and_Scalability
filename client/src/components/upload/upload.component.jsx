@@ -8,7 +8,7 @@ import { faFileCode } from "@fortawesome/free-solid-svg-icons";
 
 import "./upload.styles.scss";
 
-const UploadArea = () => {
+const UploadArea = ({ setOutput }) => {
     const { Dragger } = Upload;
 
     const props = {
@@ -28,34 +28,53 @@ const UploadArea = () => {
             try {
                 const res = await axios.post("http://localhost:3001/upload",fmData,config);
                 if (!res.headers['success']) {
-                    let error = JSON.parse(new TextDecoder("utf-8").decode(res.data)).error
-                    onError(error);
+                    let { error, description } = JSON.parse(new TextDecoder("utf-8").decode(res.data))
+                    onError({ error, description });
                 } else {
                     fileDownload(res.data, res.headers['filename']);
                     onSuccess();
+                    setOutput(res.headers['output'])
                 }
             } catch (err) {
                 onError({ err });
             }
         },
         onChange(info) {
-            const { status, error } = info.file;
+            const { status } = info.file;
+            
             if (status !== "uploading") {
                 // TODO - Remove this log before production
                 // console.log(info.file, info.fileList);
             }
             if (status === "done") {
-                message.success(`${info.file.name} file uploaded successfully.`);
+                message.success(`${info.file.name} compiled and executed successfully.`);
             } else if (status === "error") {
+                const { error, description } = info.file.error
+                
                 switch(error) {
                     case 1000:
                         message.error(`File extesion not supported.`);
+                        setOutput("")
                         break
                     case 1001:
                         message.error(`The file exceeds the maximum allowed size.`);
+                        setOutput("")
+                        break
+                    case 1002:
+                        message.error(`Something went wrong during compilation time :(`);
+                        setOutput(description)
+                        break
+                    case 1003:
+                        message.error(`Your program didn't terminate on time (max 5 seconds).`);
+                        setOutput("")
+                        break
+                    case 1004:
+                        message.error(`Your program exeeded the max stdout buffer size (max 200KB).`);
+                        setOutput("")
                         break
                     default:
                         message.error("Unknown error :/");
+                        setOutput("")
                 } 
             }
         },
@@ -63,6 +82,10 @@ const UploadArea = () => {
             // TODO - Remove this log before production
             //console.log("Dropped files", e.dataTransfer.files);
         },
+        onRemove: file => {
+            setOutput("")
+            return true
+        }
     };
 
     return (

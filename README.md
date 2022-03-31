@@ -1,3 +1,7 @@
+# TODO
+* Implementation of the waiting queue;
+* Modify the `upload` component in order to accept a second file (input file). Right now we allow to upload and execute one file only;
+
 # Project Files Structure
 * **client**: Frontend part (React)
 * **server**: Backend part (ExpressJS, Node)
@@ -24,6 +28,10 @@ Either way this will run the app in *development mode* and it will be reachable 
 **NB**: the only prerequisites in order to run smoothly the project is to have installed locally: 
 * [*Node* and *npm*](https://nodejs.org/en/) (by installing *node* you'll also get *npm*);
 * [*Yarn*](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) (after you've installed *node*, run `npm install --global yarn`)
+
+Plus, to run the macOS version of the project, you also need:
+* [*Coreutils*](https://formulae.brew.sh/formula/coreutils) (simply run `brew install coreutils` - this will be used to halt the execution of the uploaded program after tot. seconds)
+* [*Sandboxtron*](https://github.com/lynaghk/sandboxtron) (clone the repository and add the absolute path of the `/bin` folder to your system `$PATH` - this will be used to sandbox the execution)
 
 # Packages Used
 For the frontend part:
