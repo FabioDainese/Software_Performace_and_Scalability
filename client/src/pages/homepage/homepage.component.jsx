@@ -36,11 +36,8 @@ const Homepage = () => {
             </Row>
             {output ? (
                 <Row justify="center" align="middle">
-                    <Col xs={18} md={14} lg={9} xl={7}>
-                        <Terminal
-                            className="terminal"
-                            output={output}
-                        />
+                    <Col xs={18} md={14} lg={9} xl={7} className="terminal-output" >
+                        <Terminal output={output}/>
                     </Col>
                 </Row>
             ) : null}
