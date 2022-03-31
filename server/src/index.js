@@ -15,7 +15,7 @@ const main = async () => {
         filename: (req, file, callback) => {
             let extension = path.extname(file.originalname);
             let filename = path.basename(file.originalname, extension);
-            callback(null, filename + "-" + Date.now() + extension);
+            callback(null, filename + "_" + Date.now() + extension);
         },
     });
     const upload = multer({
@@ -38,6 +38,18 @@ const main = async () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
+    function clean_unused_files(executable, executableFilename) {
+        let cc_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cc`);
+        let cp_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cp`);
+        let txt_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.txt`) 
+        
+        exec(`del ${executable} && del ${cc_ext} && del ${cp_ext} && del ${txt_ext}`, (err) => {
+            if (err) {
+                //error handling 
+                console.log(`failed deleting compiled or/and source files: `, err);
+            }    
+        })
+    }
     app.route("/upload").post((req, res) => {
         fileUpload(req, res, async (error) => {
             if (error) {
@@ -59,28 +71,103 @@ const main = async () => {
                 let serverFilename = req.files["upload-area"][0].filename
                 let executableFilename = path.basename(serverFilename, path.extname(serverFilename));
                 // Absolutes path: req.files["upload-area"][0].path
-                const { error, stdout, stderr } = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`)
+                let { error, stdout, stderr } = await exec(`g++ -o .\\uploads\\${executableFilename} .\\uploads\\${serverFilename}`)
                 if (error) {
                     console.log(`error: ${error.message}`);
-                    return;
+                    return res.send({ error: message });
                 }
                 if (stderr) {
                     console.error(`stderr: ${stderr}`);
-                    return;
+                    return  res.send({ error: "Server error: 500" });
                 }
                 // TODO - Remove this log before production
                 // console.log(`Successfully generated '${executableFilename}' executable file`);
                 
-                res.download(path.join(__dirname, `../uploads/${executableFilename}`), executableFilename.replace(/-\d+$/, ""), {
-                    headers: {
-                        "filename": executableFilename.replace(/-\d+$/, ""),
-                        "success": "true"
-                    }
-                })
+                // Checking in sandbox before downloading the file
+                try {
+                    let executable = path.join(__dirname, `..\\uploads\\${executableFilename}.exe`)
+                     
+                    exec(`wt "C:\\Program Files\\Sandboxie\\Start.exe" /nosbiectrl ${executable}`) 
+                    exec(`waitfor SomethingThatIsNeverHappening /t 10 2>NUL || tasklist | grep ${executableFilename}.exe > .\\uploads\\${executableFilename}.txt`, (error, stdout, stderr) => {
+                        // error handling
+                        if (error) {
+                            console.log(`error: ${error.message}`);
+                            // TODO: capire perché se andiamo a scrivere un file vuoto ritorna errore
+                            //return res.send({ status: 'error', error: 500 });    
+                        }
 
-                // TODO - Execute the file in a sandbox env here!
+                        if (stderr) {
+                            console.error(`stderr: ${stderr}`);
+                            return res.send({ status: 'error', error: 500 });
+                        }
+                        // batch script to check program execution into sandbox
+                        exec(`for %I in (".\\uploads\\${executableFilename}.txt") do @echo %~zI`, (error, size, stderr) => {
+                            
+                            // error handling
+                            let executable_description = 'while trying to get executable size'
+                            if (error) {
+                                console.log(`error` + executable_description + `: ${error.message}`);
+                                return res.send({ status: 'error', error: 500 });    
+                            }
 
-                await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`)
+                            if (stderr) {
+                                console.error(`stderr` + executable_description + `: ${stderr}`);
+                                return res.send({ status: 'error', error: 500 });
+                            }
+
+                            if (parseInt(size) === 0) {
+                                res.download(`${executable}`, executableFilename.replace(/-\d+$/, ""), {
+                                        headers: {
+                                            "filename": executableFilename.replace(/-\d+$/, "").concat(".exe"),
+                                            "success": "true"
+                                        }
+                                    }, 
+                                    (err) => {
+                                        if (err) {
+                                            //error handling 
+                                            console.log(`error while downloading executable: `, err);
+                                        }     
+                                    }   
+                                )     
+                            } else {
+                                let cc_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cc`);
+                                let cp_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cp`);
+                                let txt_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.txt`) 
+                                
+                                exec(`del ${executable} && del ${cc_ext} && del ${cp_ext} && del ${txt_ext}`, (err) => {
+                                    if (err) {
+                                        //error handling 
+                                        console.log(`failed deleting compiled or/and source files: `, err);
+                                    }    
+                                })
+
+                                exec(`"C:\\Program Files\\Sandboxie\\Start.exe" /terminate`, (err) => {
+                                    if (err) {
+                                        //error handling 
+                                        console.log(`failed terminating sandbox: `, err);
+                                    }    
+                                })
+                                res.send({ status: 'error', error: 1002 });
+                            }
+
+                            let cc_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cc`);
+                            let cp_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.cp`);
+                            let txt_ext = path.join(__dirname, `..\\uploads\\${executableFilename}.txt`) 
+                            
+                            exec(`del ${executable} && del ${cc_ext} && del ${cp_ext} && del ${txt_ext}`, (err) => {
+                                if (err) {
+                                    //error handling 
+                                    console.log(`failed deleting compiled or/and source files: `, err);
+                                }    
+                            })
+
+                            return res;
+                        })
+                    })
+                } catch (e) {
+                    console.error(`error:`, e);
+                    return res.send({ status: 'error', error: 500 });
+                }
             }
         })
     });

@@ -22,7 +22,10 @@ const UploadArea = () => {
                 headers: { 
                     "content-type": "multipart/form-data",
                 },
-                responseType:'arraybuffer'
+                onUploadProgress: event => {
+                    message.loading(`Checking the file..`);
+                },
+                responseType:'arraybuffer', 
             };
             fmData.append("upload-area",file);
             try {
@@ -54,6 +57,12 @@ const UploadArea = () => {
                     case 1001:
                         message.error(`The file exceeds the maximum allowed size.`);
                         break
+                    case 1002:
+                        message.error(`The file is not considered to be safe from the server.`)
+                        break
+                    case 500:
+                        message.error(`Internal server error.`)
+                        break 
                     default:
                         message.error("Unknown error :/");
                 } 
