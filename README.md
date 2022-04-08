@@ -1,5 +1,4 @@
 # TODO
-* Implementation of the waiting queue;
 * Modify the `upload` component in order to accept a second file (input file). Right now we allow to upload and execute one file only;
 
 # Project Files Structure
@@ -7,7 +6,7 @@
 * **server**: Backend part (ExpressJS, Node)
 
 # How to Run This Code
-Right after cloning the repository place yourself inside all of the following folders and run `yarn install` using the terminal/shell.
+Right after cloning the repository place yourself inside all of the following folders and run `yarn install` using the terminal/shell:
 * `Software_Performance_2022` (aka the project folder)
 * `client`
 * `server`
