@@ -5,9 +5,24 @@ const path = require("path");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 
+const Queue = require('bull');
+
 const main = async () => {
     const app = express();
     const port = process.env.PORT || 3001;
+
+    const waitingQueue = new Queue('waiting queue',{
+        redis: {
+            host: '127.0.0.1',
+            port: 3002,
+        }
+    });
+    const numWorkers = 4;
+    waitingQueue.process(numWorkers, __dirname + "/processor.js");
+    waitingQueue.on('failed', (job, result) => {
+        console.log("The jobs failed unexpectedly :(")
+    });
+
     const storage = multer.diskStorage({
         destination: (req, file, callback) => {
             callback(null, path.join(__dirname, "../uploads/"));
@@ -56,59 +71,28 @@ const main = async () => {
                             status = 0;
                     }
                 }
-
-                // TODO - Remove this log before production
-                // console.log(error.message)
+                
                 return res.send({ error: status });
             } else {
-                let serverFilename = req.files["upload-area"][0].filename;
-                let executableFilename = path.basename(serverFilename,path.extname(serverFilename));
+                serverFilename = req.files["upload-area"][0].filename;
+                executableFilename = path.basename(serverFilename,path.extname(serverFilename));
                 // Absolutes path: req.files["upload-area"][0].path
-                try {
-                    let { error, stdout, stderr } = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`);
-                    // If the file compiled without any error, stout|stderr|error should be empty
-                } catch (error) {
-                    await exec(`rm ./uploads/${serverFilename}`);
-
-                    return res.send({
-                        error: 1002,
-                        description: error.stderr.replace(
-                            `./uploads/${serverFilename}`,
-                            `${executableFilename.replace(/-\d+$/, "")}.cpp`
-                        ),
-                    });
+                const job = await waitingQueue.add({
+                    serverFilename: serverFilename,
+                    executableFilename: executableFilename
+                })
+                
+                const result = await job.finished();
+                if(result.error) {
+                    res.send(result)
+                } else {
+                    res.download(
+                        path.join(__dirname, `../uploads/${executableFilename}`),
+                        executableFilename.replace(/-\d+$/, ""),
+                        result
+                    );
                 }
-
-                try {
-                    // Executing the file in a sandbox env (macOS version - sandbox-exec) - Stdout max buffer size 200KB
-                    ({ error, stdout, stderr } = await exec(`timeout 5 sb -- ./uploads/${executableFilename}`, { maxBuffer: 200 * 1024 }));
-                    // If the execution terminated on time, error|stderr should be empty, meanwhile stout should contain the output of the progam
-                } catch (error) {
-                    await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`);
-
-                    let status = 1003
-                    if(error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
-                        status = 1004
-                    }
-
-                    return res.send({
-                        error: status
-                    });
-                }
-
-                res.download(
-                    path.join(__dirname, `../uploads/${executableFilename}`),
-                    executableFilename.replace(/-\d+$/, ""),
-                    {
-                        headers: {
-                            filename: executableFilename.replace(/-\d+$/, ""),
-                            success: "true",
-                            output: stdout.replace(/\n/g, "\\n"),
-                        },
-                    }
-                );
-
-                await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`);
+                await exec(`rm ./uploads/${serverFilename} ${result.error === 1002 ? "" : "./uploads/" + executableFilename}`);
             }
         });
     });

@@ -12,6 +12,11 @@ Right after cloning the repository place yourself inside all of the following fo
 * `client`
 * `server`
 
+Moreover, create a new *Redis* container in *Docker*, like so:
+```
+docker run -p 3002:6379 --name redis-waiting-queue -d redis
+```
+
 ****
 
 Then, to run the application, place yourself in the *project folder* and execute:
@@ -23,11 +28,15 @@ Or alternatively, in two separate terminals, execute:
 
 Either way this will run the app in *development mode* and it will be reachable by visiting [http://localhost:3000](http://localhost:3000) using a browser.
 
+Finally, start the *Redis* container:
+* `docker start redis-waiting-queue`
+
 ***
 
-**NB**: the only prerequisites in order to run smoothly the project is to have installed locally: 
+**NB**: the only **prerequisites** in order to run smoothly the project is to have installed locally: 
 * [*Node* and *npm*](https://nodejs.org/en/) (by installing *node* you'll also get *npm*);
 * [*Yarn*](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) (after you've installed *node*, run `npm install --global yarn`)
+* [*Docker*](https://docs.docker.com/desktop/) (this will be used to run a *Redis* container for the waiting queue)
 
 Plus, to run the macOS version of the project, you also need:
 * [*Coreutils*](https://formulae.brew.sh/formula/coreutils) (simply run `brew install coreutils` - this will be used to halt the execution of the uploaded program after tot. seconds)
