@@ -1,6 +1,3 @@
-# TODO
-* Modify the `upload` component in order to accept a second file (input file). Right now we allow to upload and execute one file only;
-
 # Project Files Structure
 * **client**: Frontend part (React)
 * **server**: Backend part (ExpressJS, Node)
@@ -54,6 +51,7 @@ Meanwhile, for the backend part:
 * Nodemon
 * Cors
 * Multer
+* Bull
 
 # Tsung - Benchmarking
 ### Installation
@@ -85,7 +83,7 @@ If you want to automatically generate a valid *Tsung* session configuration file
 * `tsung-recorder start`: to start the recording of the session;
 * `tsung-recorder stop`: to end the recording session;
 
-# Consideration About Performance
+# Considerations About Performance
 In order to increase the performance of the project here's a couples of possible improvements:
 
 * Introduce some caching techniques (e.g. if the uploaded file is the same it's useless to recompile it once again);

@@ -92,7 +92,7 @@ const main = async () => {
                         result
                     );
                 }
-                await exec(`rm ./uploads/${serverFilename} ${result.error === 1002 ? "" : "./uploads/" + executableFilename}`);
+                await exec(`rm ./uploads/"${serverFilename}" ${result.error === 1002 ? "" : `./uploads/"${executableFilename}"`}`);
             }
         });
     });

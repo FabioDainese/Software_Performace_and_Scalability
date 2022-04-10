@@ -4,7 +4,7 @@ const exec = util.promisify(require("child_process").exec);
 module.exports = async function (job) {
     const { serverFilename, executableFilename } = job.data
     try {
-        let { error, stdout, stderr } = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`);
+        let { error, stdout, stderr } = await exec(`g++ -o ./uploads/"${executableFilename}" ./uploads/"${serverFilename}"`);
         // If the file compiled without any error, stout|stderr|error should be empty
     } catch (error) {
         return Promise.resolve({
@@ -19,7 +19,7 @@ module.exports = async function (job) {
     try {
         // Executing the file in a sandbox env (macOS version - sandbox-exec) - Stdout max buffer size 200KB
         ({ error, stdout, stderr } = await exec(
-            `timeout 5 sb -- ./uploads/${executableFilename}`,
+            `timeout 5 sb -- ./uploads/"${executableFilename}"`,
             { maxBuffer: 200 * 1024 }
         ));
         // If the execution terminated on time, error|stderr should be empty, meanwhile stout should contain the output of the progam
