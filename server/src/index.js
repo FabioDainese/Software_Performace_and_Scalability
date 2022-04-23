@@ -94,16 +94,27 @@ const main = async () => {
                             (content) => {
                                 if (content.program_name !== undefined) {   
                                     exec(`rm ./uploads/${serverFilename}`);
-                                    res.download(
-                                        path.join(__dirname, `../uploads/${content.program_name}`),
-                                        content.program_name.replace(/-\d+$/, ""), {
-                                            headers: {
-                                                filename: content.program_name.replace(/-\d+$/, ""),
-                                                success: "true",
-                                            }, 
+                                    // If a file is taken from the cache, we are sure that its execution is safe 
+                                    //so to get the output we can just execute it
+                                    exec(`./uploads/${content.program_name}`).then((result) => {
+                                        if (result.stderr != null){
+                                            res.download(
+                                                path.join(__dirname, `../uploads/${content.program_name}`),
+                                                content.program_name.replace(/-\d+$/, ""), {
+                                                    headers: {
+                                                        filename: content.program_name.replace(/-\d+$/, ""),
+                                                        success: "true",
+                                                        output: result.stdout.replace(/\n/g, "\\n"),
+                                                    }, 
+                                                }
+                                                
+                                            );
+                                        } else {
+                                            console.log(result.stderr);
+                                            res.send(result.stderr);
                                         }
-                                        
-                                    );
+                                    });
+
                                 } else {
                                     compileProgram();
                                 }
@@ -142,11 +153,7 @@ const main = async () => {
                     }
                 };
 
-                const downloadPromise = new Promise(function(downloadCallback) {
-                    downloadCallback();
-                });
-                
-                downloadPromise.then(() => {
+                const downloadPromise = new Promise(() => {
                     takeFromCache();
                 });
                 
