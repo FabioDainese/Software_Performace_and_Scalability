@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<!DOCTYPE tsung SYSTEM "/usr/local/share/tsung/tsung-1.0.dtd">
+<tsung loglevel="notice" version="1.0">
+    <clients>
+        <client maxusers="10000" host="localhost" use_controller_vm="true"/>
+    </clients>
+
+    <servers>
+        <server host="localhost" port="3000" type="tcp"/>
+    </servers>
+
+    <monitoring>
+        <monitor host="mac-mini-server" type="snmp"/>
+    </monitoring>
+
+    <load>
+        <arrivalphase phase="1" duration="3" unit="minute">
+            <users maxnumber="10000" arrivalrate="10" unit="second"/>
+        </arrivalphase>
+    </load>
+
+    <options>
+        <option type="ts_http" name="user_agent">
+            <user_agent probability="50">Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15</user_agent>
+            <user_agent probability="50">Mozilla/5.0 (Macintosh; Intel Mac OS X 12.3; rv:99.0) Gecko/20100101 Firefox/99.0</user_agent>
+        </option>
+    </options>
+    
+    <sessions>
+        <session name="upload_run" probability="40" type="ts_http">
+            <transaction name="RUN_homepage">
+                <request>
+                    <http url="http://localhost:3000/" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/js/main.59da8ea6.js" version="1.1" method="GET">
+                        <http_header name="Accept" value="*/*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/css/main.51bce208.css" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/css,*/*;q=0.1"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+
+            <transaction name="RUN_think">
+                <thinktime random="true" value="5"/>
+            </transaction>
+
+            <transaction name="RUN_upload">
+                <request>
+                    <http url="http://localhost:3001/upload" version="1.1" contents_from_file="/Users/matteo/Downloads/run.bin" content_type="multipart/form-data; boundary=---------------------------121706116314081444713165167721" method="POST">
+                        <http_header name="Accept" value="application/json, text/plain, */*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+        </session>
+
+        <session name="upload_run2" probability="40" type="ts_http">
+            <transaction name="RUN2_homepage">
+                <request>
+                    <http url="http://localhost:3000/" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/js/main.59da8ea6.js" version="1.1" method="GET">
+                        <http_header name="Accept" value="*/*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/css/main.51bce208.css" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/css,*/*;q=0.1"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+
+            <transaction name="RUN2_think">
+                <thinktime random="true" value="5"/>
+            </transaction>
+
+            <transaction name="RUN2_upload">
+                <request>
+                    <http url="http://localhost:3001/upload" version="1.1" contents_from_file="/Users/matteo/Downloads/run2.bin" content_type="multipart/form-data; boundary=---------------------------24828604061533704772171781363" method="POST">
+                        <http_header name="Accept" value="application/json, text/plain, */*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+        </session>
+
+        <session name="upload_run-broken" probability="10" type="ts_http">
+            <transaction name="RUNBROKEN_homepage">
+                <request>
+                    <http url="http://localhost:3000/" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/js/main.59da8ea6.js" version="1.1" method="GET">
+                        <http_header name="Accept" value="*/*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/css/main.51bce208.css" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/css,*/*;q=0.1"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+            
+            <transaction name="RUNBROKEN_think">
+                <thinktime random="true" value="5"/>
+            </transaction>
+
+            <transaction name="RUNBROKEN_upload">
+                <request>
+                    <http url="http://localhost:3001/upload" version="1.1" contents_from_file="/Users/matteo/Downloads/run-broken.bin" content_type="multipart/form-data; boundary=---------------------------387013327537545735901377234433" method="POST">
+                        <http_header name="Accept" value="application/json, text/plain, */*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+        </session>
+
+        <session name="upload_run-max-buffer-size" probability="5" type="ts_http">
+            <transaction name="RUNMAXBUFFER_homepage">
+                <request>
+                    <http url="http://localhost:3000/" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/js/main.59da8ea6.js" version="1.1" method="GET">
+                        <http_header name="Accept" value="*/*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/css/main.51bce208.css" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/css,*/*;q=0.1"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+
+            <transaction name="RUNMAXBUFFER_think">
+                <thinktime random="true" value="5"/>
+            </transaction>
+
+            <transaction name="RUNMAXBUFFER_upload">
+                <request>
+                    <http url="http://localhost:3001/upload" version="1.1" contents_from_file="/Users/matteo/Downloads/run-max-buffer-size.bin" content_type="multipart/form-data; boundary=---------------------------257250482636066967112058664360" method="POST">
+                        <http_header name="Accept" value="application/json, text/plain, */*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+        </session>
+
+        <session name="upload_run-timeout" probability="5" type="ts_http">
+            <transaction name="RUNTIMEOUT_homepage">
+                <request>
+                    <http url="http://localhost:3000/" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/js/main.59da8ea6.js" version="1.1" method="GET">
+                        <http_header name="Accept" value="*/*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+                <request>
+                    <http url="http://localhost:3000/static/css/main.51bce208.css" version="1.1" method="GET">
+                        <http_header name="Accept" value="text/css,*/*;q=0.1"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+
+            <transaction name="RUNTIMEOUT_think">
+                <thinktime random="true" value="5"/>
+            </transaction>
+
+            <transaction name="RUNTIMEOUT_upload">
+                <request>
+                    <http url="http://localhost:3001/upload" version="1.1" contents_from_file="/Users/matteo/Downloads/run-timeout.bin" content_type="multipart/form-data; boundary=---------------------------340156929136855910641796754657" method="POST">
+                        <http_header name="Accept" value="application/json, text/plain, */*"/>
+                        <http_header name="Accept-Encoding" value="gzip, deflate"/>
+                        <http_header name="Accept-Language" value="en-US,en;q=0.5"/>
+                    </http>
+                </request>
+            </transaction>
+        </session>
+    </sessions>
+</tsung>
