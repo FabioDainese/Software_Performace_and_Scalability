@@ -1,34 +1,22 @@
 version: '3'
 services:
- redis:
-  image: "redis:alpine"
-  ports:
-   - "3002:6379"
-  expose:
-   - 3002
-  restart:
-   always
+  redis:
+    image: "redis:latest"
+    ports:
+      - "3002:6379"
+    expose:
+      - 6379
+    restart:
+      always
   
- dev:
-  image: node:17
-  volumes:
-   - .:/usr/src/service 
-  working_dir: /usr/src/service
-  command: 
-   - bash -c "npm install --global yarn"
-   - bash -c "yarn install"
-   - bash -c "cd ./client && yarn install"
-   - bash -c "cd ./server && yarn install"
-   - bash -c "yarn start"
-  ports:
-   - 3000:3000
-   - 3001:3001
-   - 1234:1234
-   - 1235:1235
-  expose:
-   - 3000
-   - 3001
-   - 1234
-   - 1235
-   - 6060
-   - 80
+  webapp:
+    build: .
+    ports:
+    - 3000:3000
+    - 3001:3001
+    expose: 
+      - 3000 
+      - 3001
+networks:
+  my-net:
+    driver: bridge

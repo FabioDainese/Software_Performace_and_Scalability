@@ -11,7 +11,7 @@ module.exports = async function (job) {
     const { serverFilename, executableFilename } = job.data
 
     const redisClient = redis.createClient({
-        url: 'redis://localhost:3002'
+        url: 'redis://redis:6379'
     });
 
     redisClient.on('error', (err) => console.log('Redis Client Error', err));
@@ -35,13 +35,13 @@ module.exports = async function (job) {
             // once we delete the excutable we need to remove the hash associated in redis
             fs.readFile(filePos.slice(0,-1), (err, data) => {
                 programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
-                exec(`docker ps -q -f "name=redis-waiting-queue" | xargs -o -I'{}' docker exec -it {} redis-cli HDEL ${programHash} program_name`);
-                console.log(programHash + " :content deleted from the cache");
+                redisClient.HDEL(programHash, 'program_name')
+                console.log(programHash + ":content successfully deleted from the cache");
                 exec(`rm ${filePos}`); // removing source since we don't need the file anymore
             });
         }
 
-        ({error, stdout, stderr} = await exec(`g++ -o ./uploads/"${executableFilename}" ./uploads/"${serverFilename}"`));
+        ({error, stdout, stderr} = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`));
         
         
         // If the file compiled without any error, stout|stderr|error should be empty
@@ -58,11 +58,12 @@ module.exports = async function (job) {
     try {
         // Executing the file in a sandbox env (macOS version - sandbox-exec) - Stdout max buffer size 200KB
         ({ error, stdout, stderr } = await exec(
-            `timeout 5 sb -- ./uploads/"${executableFilename}"`,
+            `timeout 5 firejail -- ./uploads/"${executableFilename}"`,
             { maxBuffer: 200 * 1024 }
         ));
         // If the execution terminated on time, error|stderr should be empty, meanwhile stout should contain the output of the progam
     } catch (error) {
+        await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`); // safely remove executable since we compiling did not succeeded
         let status = 1003;
         if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
             status = 1004;
