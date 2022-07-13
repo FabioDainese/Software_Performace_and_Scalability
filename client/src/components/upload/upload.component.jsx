@@ -33,6 +33,11 @@ const UploadArea = ({ setOutput }) => {
                 } else {
                     fileDownload(res.data, res.headers['filename']);
                     onSuccess();
+                    if(res.headers['cached'] === "true") {
+                        message.success(`${file.name} retrieved from cache successfully.`);
+                    } else if(res.headers['cached'] === "false") {
+                        message.success(`${file.name} compiled and executed successfully.`);
+                    } 
                     setOutput(res.headers['output'])
                 }
             } catch (err) {
@@ -41,14 +46,8 @@ const UploadArea = ({ setOutput }) => {
         },
         onChange(info) {
             const { status } = info.file;
-            
-            if (status !== "uploading") {
-                // TODO - Remove this log before production
-                // console.log(info.file, info.fileList);
-            }
-            if (status === "done") {
-                message.success(`${info.file.name} compiled and executed successfully.`);
-            } else if (status === "error") {
+    
+            if (status === "error") {
                 const { error, description } = info.file.error
                 
                 switch(error) {
@@ -77,10 +76,6 @@ const UploadArea = ({ setOutput }) => {
                         setOutput("")
                 } 
             }
-        },
-        onDrop(e) {
-            // TODO - Remove this log before production
-            //console.log("Dropped files", e.dataTransfer.files);
         },
         onRemove: file => {
             setOutput("")

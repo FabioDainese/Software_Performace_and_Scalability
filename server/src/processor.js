@@ -19,30 +19,27 @@ module.exports = async function (job) {
     await redisClient.connect();    
 
     try {
-        let { error, stdout, stderr } = await exec(`ls ./uploads | grep -v .cc | grep -v .cpp | wc -l `);
+        let { error, stdout, stderr } = await exec(`ls ./uploads | wc -l `);
         // if max element of executable is reached
         let executableNumber = stdout.replace(/\s/g, '');
         
         if (executableNumber == MAXCACHEDELEMENTS ) {
             // getting older executable
-            ({ error, stdout, stderr } = await exec(`ls -t ./uploads | grep -v .cc | grep -v .cpp | tail -1`));
+            ({ error, stdout, stderr } = await exec(`ls -t ./uploads | tail -1`));
            
-            // removing older executable 
-            await exec(`rm ./uploads/${stdout}`);
-            ({error, stdout, stderr} = await exec(`ls ./uploads | grep ${stdout}`)); // return source of the older exec 
             let filePos = path.join(__dirname, `../uploads/${stdout}`);
-
+            console.log(filePos);
             // once we delete the excutable we need to remove the hash associated in redis
             fs.readFile(filePos.slice(0,-1), (err, data) => {
                 programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
                 redisClient.HDEL(programHash, 'program_name')
-                console.log(programHash + ":content successfully deleted from the cache");
+                console.log(programHash + " : content successfully deleted from the cache");
                 exec(`rm ${filePos}`); // removing source since we don't need the file anymore
             });
         }
 
         ({error, stdout, stderr} = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`));
-        
+        await exec(`rm ./uploads/${serverFilename}`)
         
         // If the file compiled without any error, stout|stderr|error should be empty
     } catch (error) {
@@ -73,6 +70,7 @@ module.exports = async function (job) {
     
     return Promise.resolve({
         headers: {
+            cached: "false",
             filename: executableFilename.replace(/-\d+$/, ""),
             success: "true",
             output: stdout.replace(/\n/g, "\\n"),

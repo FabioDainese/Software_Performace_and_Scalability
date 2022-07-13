@@ -65,7 +65,7 @@ const main = async () => {
     });
     const fileUpload = upload.fields([{ name: "upload-area", maxCount: 1 }]);
 
-    app.use(cors({ exposedHeaders: ["filename", "success", "output"] }));
+    app.use(cors({ exposedHeaders: ["filename", "success", "output", "cached"] }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
@@ -87,34 +87,29 @@ const main = async () => {
             } else {
                 serverFilename = req.files["upload-area"][0].filename;
                 executableFilename = path.basename(serverFilename,path.extname(serverFilename));
+                
                 async function takeFromCache() {
                     fs.readFile(req.files["upload-area"][0].path, (err, data) => {
                         programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
-                        cachedProgram = redisClient.hGetAll(programHash).then(
+                        redisClient.hGetAll(programHash).then(
                             (content) => {
-                                if (content.program_name !== undefined) {   
-                                    exec(`rm ./uploads/${serverFilename}`);
+                                if (content.program_name !== undefined) {
                                     // If a file is taken from the cache, we are sure that its execution is safe 
                                     //so to get the output we can just execute it
-                                    exec(`./uploads/${content.program_name}`).then((result) => {
-                                        if (result.stderr != null){
-                                            res.download(
-                                                path.join(__dirname, `../uploads/${content.program_name}`),
-                                                content.program_name.replace(/-\d+$/, ""), {
-                                                    headers: {
-                                                        filename: content.program_name.replace(/-\d+$/, ""),
-                                                        success: "true",
-                                                        output: result.stdout.replace(/\n/g, "\\n"),
-                                                    }, 
-                                                }
-                                                
-                                            );
-                                        } else {
-                                            console.log(result.stderr);
-                                            res.send(result.stderr);
-                                        }
-                                    });
 
+                                    res.download(
+                                        path.join(__dirname, `../uploads/${content.program_name}`),
+                                        content.program_name.replace(/-\d+$/, ""), 
+                                        {   
+                                            headers: {
+                                                cached: "true",
+                                                filename: content.program_name.replace(/-\d+$/, ""),
+                                                success: "true",
+                                                output: content.program_content.replace(/\n/g, "\\n"),
+                                            }, 
+                                        }
+                                        
+                                    );
                                 } else {
                                     compileProgram();
                                 }
@@ -138,8 +133,10 @@ const main = async () => {
                         fs.readFile(req.files["upload-area"][0].path, (err, data) => {
                             if (data) {
                                 programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
+                                redisClient.hSet(programHash, "program_content", result.headers.output);
                                 redisClient.hSet(programHash, "program_name", executableFilename).then(
-                                    (content) => {
+                                    () => {
+                                        console.log(programHash + " : content successfully stored in cache");
                                         res.download(
                                             path.join(__dirname, `../uploads/${executableFilename}`),
                                             executableFilename.replace(/-\d+$/, ""),
@@ -153,12 +150,8 @@ const main = async () => {
                     }
                 };
 
-                const downloadPromise = new Promise(() => {
-                    takeFromCache();
-                });
+                new Promise(() => takeFromCache());
                 
-                //await exec(`rm ./uploads/${serverFilename}`);
-                //${result.error === 1002 ? "" : `./uploads/"${executableFilename}"`}`);
             }
         });
     });
