@@ -146,11 +146,11 @@ const main = async () => {
                                 );
                             }
                         });
-
+                        await exec(`rm ./uploads/"${serverFilename}" ${result.error === 1002 ? "" : `./uploads/"${executableFilename}"`}`);
                     }
                 };
 
-                new Promise(() => takeFromCache());
+                new Promise(takeFromCache);
                 
             }
         });
