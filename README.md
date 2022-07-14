@@ -9,6 +9,7 @@ You can start the application simply by typing the following command. Before exe
 ```
 docker compose up
 ```
+Then, you can reach the webapp on `http://localhost:3000`.
 
 # Packages Used
 For the frontend part:
