@@ -18,29 +18,8 @@ module.exports = async function (job) {
 
     await redisClient.connect();    
 
-    try {
-        let { error, stdout, stderr } = await exec(`ls ./uploads | wc -l `);
-        // if max element of executable is reached
-        let executableNumber = stdout.replace(/\s/g, '');
-        
-        if (executableNumber == MAXCACHEDELEMENTS ) {
-            // getting older executable
-            ({ error, stdout, stderr } = await exec(`ls -t ./uploads | tail -1`));
-           
-            let filePos = path.join(__dirname, `../uploads/${stdout}`);
-            console.log(filePos);
-            // once we delete the excutable we need to remove the hash associated in redis
-            fs.readFile(filePos.slice(0,-1), (err, data) => {
-                programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
-                redisClient.HDEL(programHash, 'program_name')
-                console.log(programHash + " : content successfully deleted from the cache");
-                exec(`rm ${filePos}`); // removing source since we don't need the file anymore
-            });
-        }
-
+    try {    
         ({error, stdout, stderr} = await exec(`g++ -o ./uploads/${executableFilename} ./uploads/${serverFilename}`));
-        await exec(`rm ./uploads/${serverFilename}`)
-        
         // If the file compiled without any error, stout|stderr|error should be empty
     } catch (error) {
         return Promise.resolve({
@@ -54,13 +33,33 @@ module.exports = async function (job) {
 
     try {
         // Executing the file in a sandbox env (macOS version - sandbox-exec) - Stdout max buffer size 200KB
-        ({ error, stdout, stderr } = await exec(
+        let { error, stdout, stderr } = await exec(
             `timeout 5 firejail -- ./uploads/"${executableFilename}"`,
             { maxBuffer: 200 * 1024 }
-        ));
+        );
+        
+        // We use grep -v to exclude in the counting processs source files
+        // Must need this since at this point source exists in the fs
+        await exec(`ls ./uploads | grep -v .cc | grep -v .cpp | wc -l `);
+        // if max element of executable is reached
+        let executableNumber = stdout.replace(/\s/g, '');
+        
+        if (executableNumber == MAXCACHEDELEMENTS ) {
+            // getting older executable
+            ({ error, stdout, stderr } = await exec(`ls -t ./uploads | grep -v .cc | grep -v .cpp | tail -1`));
+           
+            let filePos = path.join(__dirname, `../uploads/${stdout}`);
+            // once we delete the excutable we need to remove the hash associated in redis
+            fs.readFile(filePos.slice(0,-1), (err, data) => {
+                programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
+                redisClient.HDEL(programHash, 'program_name');
+                redisClient.HDEL(programHash, 'program_content');
+                console.log(programHash + " : content successfully deleted from the cache");
+                exec(`rm ${filePos}`); // removing source since we don't need the file anymore
+            });
+        }
         // If the execution terminated on time, error|stderr should be empty, meanwhile stout should contain the output of the progam
     } catch (error) {
-        await exec(`rm ./uploads/${executableFilename} ./uploads/${serverFilename}`); // safely remove executable since we compiling did not succeeded
         let status = 1003;
         if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
             status = 1004;

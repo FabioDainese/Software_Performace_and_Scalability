@@ -108,8 +108,8 @@ const main = async () => {
                                                 output: content.program_content.replace(/\n/g, "\\n"),
                                             }, 
                                         }
-                                        
                                     );
+                                    exec(`rm ./uploads/"${serverFilename}"`);
                                 } else {
                                     compileProgram();
                                 }
@@ -127,26 +127,25 @@ const main = async () => {
                     
                     const result = await job.finished();
                     if(result.error) {
+                        exec(`rm ./uploads/"${serverFilename}" ${result.error === 1002 ? "" : `./uploads/"${executableFilename}"`}`);
                         res.send(result)
                     } else {
-
                         fs.readFile(req.files["upload-area"][0].path, (err, data) => {
                             if (data) {
                                 programHash = crypto.createHash('sha512').update(data.toString()).digest('hex');
                                 redisClient.hSet(programHash, "program_content", result.headers.output);
-                                redisClient.hSet(programHash, "program_name", executableFilename).then(
-                                    () => {
-                                        console.log(programHash + " : content successfully stored in cache");
-                                        res.download(
-                                            path.join(__dirname, `../uploads/${executableFilename}`),
-                                            executableFilename.replace(/-\d+$/, ""),
-                                            result
-                                        );
-                                    }
-                                );
+                                redisClient.hSet(programHash, "program_name", executableFilename).then(() => {                                   
+                                    console.log(programHash + " : content successfully stored in cache");
+                                    exec(`rm ./uploads/${serverFilename}`);
+                                    res.download(
+                                        path.join(__dirname, `../uploads/${executableFilename}`),
+                                        executableFilename.replace(/-\d+$/, ""),
+                                        result
+                                    );
+                                })                                
                             }
                         });
-                        await exec(`rm ./uploads/"${serverFilename}" ${result.error === 1002 ? "" : `./uploads/"${executableFilename}"`}`);
+                        
                     }
                 };
 
