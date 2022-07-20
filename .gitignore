@@ -1,3 +1,11 @@
 node_modules/ 
 .env
 .DS_Store 
+server/src/prova.cc
+server/src/prova2.cc
+server/src/prova3.cc
+package-lock.json
+tsung.xml
+yarn.lock
+server/yarn.lock
+.vscode/launch.json
