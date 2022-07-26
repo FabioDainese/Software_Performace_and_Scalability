@@ -3,6 +3,8 @@ The goal of the project was to implement a web application that allows users to 
 
 The full ***documentation*** and ***benchmarks*** results are available in the [*report.pdf*](https://github.com/FabioDainese/Software_Performace_and_Scalability/tree/master/report.pdf) file.
 
+All the material was developed for the '*Software Performance and Scalability*' [Ca' Foscari University](https://www.unive.it) master's degree course in '*Software Dependability and Cyber Security*' (2021/2022).
+
 # Project Files Structure
 * **client**: Frontend part (React)
 * **server**: Backend part (ExpressJS, Node)
